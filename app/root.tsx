@@ -12,20 +12,20 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { getObtionalUser } from "./routes/auth.server";
-import { redirect } from "react-router-dom";
 import type { LoaderFunctionArgs } from "react-router-dom";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const user = await getObtionalUser({ request });
-  if (user) {
-    return redirect("/");
-  }
-  return {};
+
+  return {user};
 }
 
-const useOptionalUser = () => {
+export const useOptionalUser = () => {
   const data = useRouteLoaderData<typeof loader>("root");
-  return data.user;
+  if(data?.user){
+    return data.user
+  }
+  return null 
 }
 
 export const links: Route.LinksFunction = () => [
@@ -42,6 +42,7 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const user = useOptionalUser();
   return (
     <html lang="en">
       <head>
@@ -51,11 +52,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <nav>
-          <Link to="/register"> se connecter</Link>
+        <nav
+        style={{
+          display: 'flex',
+          flexDirection:'row',
+          gap: 4,
+        }}
+        >
+          {user ? 
           <form method="post">
-            <button type="submit">Logout</button>
-          </form>
+          <button type="submit">Se deconnecter</button>
+          </form>:
+          <Link to="/register"> Creer un compte</Link>}
         </nav>
         {children}
         <ScrollRestoration />

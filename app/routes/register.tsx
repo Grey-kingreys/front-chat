@@ -1,9 +1,8 @@
 import type { Route } from "./+types/home";
-import { Form, useLoaderData, redirect, useActionData } from "react-router-dom";
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
+import { Form, redirect, useActionData } from "react-router-dom";
+import type { ActionFunctionArgs } from "react-router-dom";
 import { z } from "zod";
 import { commitUserToken } from "./session.server";
-import { getObtionalUser } from "./auth.server";
 
 const registerSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -32,7 +31,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const jsonData = Object.fromEntries(formData);
     
     // Validation avec gestion d'erreur
-    const validatedData = registerSchema.parse(jsonData);
+    const validatedData = registerSchema.safeParse(jsonData);
+
 
     const response = await fetch('http://localhost:8000/users/register', {
       method: 'POST',
