@@ -30,12 +30,16 @@ export const commitUserToken = async (
     return commitSession(session)
 }
 
-export const logout = async ({request}: {request: Request}) => {
-    const session = await getSession(request.headers.get("Cookie"));
+export const logout = async ({ request }: { request: Request }) => {
+    const cookieHeader = request.headers.get("Cookie");
+    const session = await getSession(cookieHeader);
     const destroyedSession = await destroySession(session);
-    return redirect("/", {
-        headers: {
-            "Set-Cookie": destroyedSession
+    
+    return redirect("/",
+        {
+            headers: {
+                "Set-Cookie": destroyedSession
+            }
         }
-    })
-  }
+    );
+};

@@ -42,7 +42,6 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const user = useOptionalUser();
   return (
     <html lang="en">
       <head>
@@ -59,11 +58,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           gap: 4,
         }}
         >
-          {user ? 
-          <form method="post">
-          <button type="submit">Se deconnecter</button>
-          </form>:
-          <Link to="/register"> Creer un compte</Link>}
+          
         </nav>
         {children}
         <ScrollRestoration />

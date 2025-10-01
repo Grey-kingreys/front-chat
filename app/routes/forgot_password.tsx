@@ -17,18 +17,27 @@ import {
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import type { LoaderFunctionArgs } from "react-router-dom";
+import { getObtionalUser } from "./auth.server";
 
-const registerSchema = z.object({
+const forgotPasswordSchema = z.object({
   email: z.string().email("Email invalide"),
-  name: z.string().min(3, "Le nom doit contenir au moins 3 caractères"),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
 });
 
-const tokenSchema = z.object({
-  token: z.string().optional(),
-  message: z.string().optional(),
-  error: z.boolean().optional(),
+const feedbackSchema = z.object({
+  message: z.string(),
+  error: z.boolean(),
 });
+
+const loader = async ({ request }: LoaderFunctionArgs) => {
+  const user = await getObtionalUser({ request });
+
+  if(user){
+    return redirect("/")
+  }
+
+  return {}
+}
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -42,7 +51,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const jsonData = Object.fromEntries(formData);
     
-    const validatedData = registerSchema.safeParse(jsonData);
+    const validatedData = forgotPasswordSchema.safeParse(jsonData);
 
     if (!validatedData.success) {
       return {
@@ -64,23 +73,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     const resJson = await response.json();
-    const { token, message, error } = tokenSchema.parse(resJson);
+    const { message, error } = feedbackSchema.parse(resJson);
 
-    if (error || !token) {
+    if (error || !message) {
       return {
         error: true,
         message: message || "Erreur lors de l'inscription"
       };
     }
 
-    const cookie = await commitUserToken({
-      request, 
-      userToken: token
-    });
-
     return redirect("/", {
       headers: {
-        "Set-Cookie": cookie
+        "Set-Cookie": 
       }
     });
 
@@ -101,32 +105,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 }
 
-export default function RegisterForm() {
+export default function ForgotPasswordForm() {
   const actionData = useActionData<{ error?: boolean; message?: string }>();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Créer un compte</CardTitle>
+          <CardTitle className="text-2xl font-bold">Mot de passe oublié</CardTitle>
           <CardDescription>
-            Rejoignez notre application de chat
+            Recuperation 
           </CardDescription>
         </CardHeader>
         
         <CardContent>
           <Form method="post" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom</Label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Votre nom complet"
-                required
-                minLength={3}
-              />
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -139,29 +132,6 @@ export default function RegisterForm() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Au moins 8 caractères"
-                required
-                minLength={8}
-              />
-            </div>
-
-            {actionData?.error && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {actionData.message}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <Button type="submit" className="w-full" size="lg">
-              Créer votre compte
-            </Button>
           </Form>
         </CardContent>
 

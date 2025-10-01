@@ -1,9 +1,24 @@
 import type { Route } from "./+types/home";
-import { Form, useActionData } from "react-router-dom";
-import type { ActionFunctionArgs,  } from "react-router-dom";
+import { Form, Link, redirect, useActionData } from "react-router-dom";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
 import {  z } from "zod";
 import { commitUserToken } from "./session.server";
 import { useOptionalUser } from "~/root";
+
+import { Button } from "../components/ui/button"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
+
+
 
 
 const loginSchema = z.object({
@@ -22,6 +37,7 @@ export function meta({}: Route.MetaArgs) {
     { name: "description", content: "Welcome to React Router!" },
   ];
 }
+
 
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -112,8 +128,7 @@ export default  function Home() {
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif, serif' }}>
-      <h1>Chat App</h1>
-      {isConnected ? <h1>Welcome {user.name}</h1> : <LoginForm />}
+      {isConnected ? <Dashboard /> : <LoginForm />}
     </div>
     
   );
@@ -127,28 +142,115 @@ const LoginForm = () => {
   }>();
   
   return(
-    <div style={{ fontFamily: 'system-ui, sans-serif, serif' }}>
-      <Form method="post">
-        <input type="text" name="email" placeholder="Email" /> <br /> <br />
-        <input type="password" name="password" placeholder="Password" /> <br /> <br />
-        <button type="submit">Login</button>
-      </Form>
-      
-      
-      {/* Affichage des erreurs */}
-      {actionData?.error && actionData.messages && (
-        <div style={{ color: 'red', marginBottom: '1rem' }}>
-          {actionData.messages.map((message, index) => (
-            <div key={index}>{message}</div>
-          ))}
+    <Card className="w-full max-w-sm">
+      <CardHeader>
+        <CardTitle>Connectez-vous a votre compte</CardTitle>
+        <CardDescription>
+          Entrez votre email ci-dessous pour vous connecter
+        </CardDescription>
+        <div className="mt-2"> {/* Remplacement de CardAction */}
+          <Button variant="link" asChild>
+            <Link to="/register">Vous inscrire</Link>
+          </Button>
         </div>
-      )}
+      </CardHeader>
       
-      {actionData?.error && actionData.message && !actionData.messages && (
-        <div style={{ color: 'red', marginBottom: '1rem' }}>
-          {actionData.message}
+      <CardContent>
+        <Form method="post">
+          <div className="flex flex-col gap-6">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
+                <a
+                  href="#"
+                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                >
+                  Mot de passe oublié?
+                </a>
+              </div>
+              <Input id="password" name="password" type="password" required />
+            </div>
+            
+            <Button type="submit" className="w-full">
+              Login
+            </Button>
+          </div>
+        </Form>
+      </CardContent>
+      
+      <CardFooter className="flex-col gap-2">
+        <Button variant="outline" className="w-full">
+          Login with Google
+        </Button>
+
+        {/* Affichage des erreurs */}
+        {actionData?.error && actionData.messages && (
+          <div style={{ color: 'red', marginBottom: '1rem' }}>
+            {actionData.messages.map((message, index) => (
+              <div key={index}>{message}</div>
+            ))}
+          </div>
+        )}
+        
+        {actionData?.error && actionData.message && !actionData.messages && (
+          <div style={{ color: 'red', marginBottom: '1rem' }}>
+            {actionData.message}
+          </div>
+        )}
+      </CardFooter>
+    </Card>
+  )
+}
+
+const Dashboard = () => {
+  const user = useOptionalUser()
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* En-tête avec bouton de déconnexion */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <Form method="post" action="/logout">
+            <Button 
+              type="submit"
+              variant="outline"
+              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              Se déconnecter
+            </Button>
+          </Form>
         </div>
-      )}
+
+        {/* Carte de bienvenue */}
+        <Card className="shadow-lg border-0">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl text-gray-800">
+              Bienvenue, {user?.name || "Utilisateur"}
+            </CardTitle>
+            <CardDescription className="text-lg">
+              Heureux de vous revoir sur votre espace personnel
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+              <p className="text-blue-800">
+                Votre tableau de bord est prêt. Commencez à explorer vos fonctionnalités.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
